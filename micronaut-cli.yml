@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: org.example
+testFramework: spock
+sourceLanguage: java
+buildTool: gradle
+features: [ app-name, data, data-jdbc, flyway, gradle, http-client-test, java, java-application, jdbc-hikari, logback, micronaut-aot, micronaut-build, micronaut-http-validation, netty-server, openapi, postgres, properties, readme, serialization-jackson, shade, spock, static-resources, swagger-ui, testcontainers, validation ]
