@@ -32,9 +32,6 @@ dependencies {
     runtimeOnly("org.yaml:snakeyaml")
     testImplementation("io.micronaut:micronaut-http-client")
     testImplementation("org.apache.commons:commons-compress:1.27.1")
-    testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:spock")
-    testImplementation("org.testcontainers:testcontainers")
 }
 
 

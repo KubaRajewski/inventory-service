@@ -1,0 +1,28 @@
+micronaut:
+  application:
+    name: inventory-service
+  router:
+    static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /swagger-ui/**
+
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/inventory
+    username: inventory
+    password: inventory
+    driverClassName: org.postgresql.Driver
+
+flyway:
+  datasources:
+    default:
+      enabled: true
+
+logger:
+  levels:
+    io.micronaut.flyway: DEBUG
+    org.flywaydb: DEBUG
