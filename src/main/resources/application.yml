@@ -1,0 +1,11 @@
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/inventory
+    username: inventory
+    password: inventory
+    driverClassName: org.postgresql.Driver
+
+flyway:
+  datasources:
+    default:
+      enabled: true
