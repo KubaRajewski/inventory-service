@@ -15,15 +15,19 @@ public interface ProductRepository extends CrudRepository<ProductEntity, Long> {
     Optional<ProductEntity> findBySku(String sku);
 
     @Query("""
-        select *
-        from product
-        where active = true
-          and (
-            sku ilike ('%' || :q || '%')
-            or name ilike ('%' || :q || '%')
-          )
-        order by sku
-        limit :limit offset :offset
-    """)
-    List<ProductEntity> search(String q, int limit, int offset);
+            SELECT *
+            FROM product
+            WHERE active = true
+            ORDER BY name ASC
+            """)
+    List<ProductEntity> listActive();
+
+    @Query("""
+            SELECT *
+            FROM product
+            WHERE (LOWER(name) LIKE CONCAT('%', LOWER(:query), '%')
+               OR LOWER(sku)  LIKE CONCAT('%', LOWER(:query), '%'))
+            ORDER BY name ASC
+            """)
+    List<ProductEntity> search(String query);
 }

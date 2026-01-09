@@ -8,18 +8,31 @@ import org.example.domain.Location;
 import org.example.persistence.entity.StockEntity;
 import org.example.persistence.entity.StockId;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @JdbcRepository(dialect = Dialect.POSTGRES)
 public interface StockRepository extends CrudRepository<StockEntity, StockId> {
 
+    List<StockEntity> findByIdProductIdIn(Collection<Long> productIds);
+
     Optional<StockEntity> findByIdProductIdAndIdLocation(Long productId, Location location);
 
     @Query("""
-        select *
-        from stock
-        where product_id = any(:productIds)
-    """)
-    List<StockEntity> findByProductIdIn(List<Long> productIds);
+            UPDATE stock
+            SET quantity = quantity + :qty
+            WHERE product_id = :productId
+              AND location = :location
+            """)
+    long increaseQuantity(Long productId, Location location, long qty);
+
+    @Query("""
+            UPDATE stock
+            SET quantity = quantity - :qty
+            WHERE product_id = :productId
+              AND location = :location
+              AND quantity >= :qty
+            """)
+    long decreaseQuantityIfEnough(Long productId, Location location, long qty);
 }

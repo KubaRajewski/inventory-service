@@ -1,10 +1,9 @@
 package org.example.persistence.entity;
 
+import io.micronaut.data.annotation.DateCreated;
 import io.micronaut.data.annotation.GeneratedValue;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
-import io.micronaut.data.annotation.MappedProperty;
-import io.micronaut.data.model.DataType;
 import org.example.domain.Location;
 import org.example.domain.MovementType;
 
@@ -17,19 +16,13 @@ public record MovementEntity(
         Long id,
 
         Long productId,
-
-        @MappedProperty(type = DataType.STRING)
         MovementType type,
+        Long quantity,
 
-        @MappedProperty(type = DataType.STRING)
         Location fromLocation,
-
-        @MappedProperty(type = DataType.STRING)
         Location toLocation,
 
-        Integer quantity,
-        Instant occurredAt,
-        String note,
-
-        Long salesImportId
-) {}
+        @DateCreated Instant occurredAt,
+        String note
+) {
+}
