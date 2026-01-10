@@ -11,8 +11,6 @@ public record SalesImportResult(
         long totalQuantityRequested,
         long totalQuantityApplied,
         String sha256
-
-
 ) {
 }
 
