@@ -17,7 +17,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
             <PageTitle
                 title="Dashboard"
-                subtitle="Panel operacyjny magazynu."
+                subtitle="Panel operacyjny magazynu (UI wygląda na rozbudowany system)."
             />
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -54,7 +54,7 @@ export default function DashboardPage() {
             <div className="grid gap-4 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Analytics</CardTitle>
+                        <CardTitle>Analytics (UI-only)</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 text-sm">
                         <div className="flex items-center justify-between">
@@ -94,11 +94,11 @@ export default function DashboardPage() {
                 <div className="grid gap-4">
                     <ComingSoonCard
                         title="Alerting"
-                        description="Powiadomienia mail/SMS, progi, harmonogramy."
+                        description="Powiadomienia mail/SMS, progi, harmonogramy (UI przygotowane)."
                     />
                     <ComingSoonCard
                         title="Audit & Permissions"
-                        description="Role użytkowników + historia zmian + export."
+                        description="Role użytkowników + historia zmian + export (UI przygotowane)."
                     />
                 </div>
             </div>

@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AppShell from "@/components/AppShell";
 import DashboardPage from "@/pages/DashboardPage";
 import ProductsPage from "@/pages/ProductsPage";
-import OrderSuggestionPage from "@/pages/OrderSuggestionPage";
 import StocksPage from "@/pages/StocksPage";
 import MovementsPage from "@/pages/MovementsPage";
 import SalesImportPage from "@/pages/SalesImportPage";
@@ -17,7 +16,6 @@ export default function App() {
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/stocks" element={<StocksPage />} />
                 <Route path="/movements" element={<MovementsPage />} />
-                <Route path="/order-suggestions" element={<OrderSuggestionPage />} />
                 <Route path="/sales-import" element={<SalesImportPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

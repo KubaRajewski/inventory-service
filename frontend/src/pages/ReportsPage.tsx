@@ -50,15 +50,15 @@ export default function ReportsPage() {
             <div className="grid gap-4 lg:grid-cols-3">
                 <ComingSoonCard
                     title="Rotacja / Zaleganie"
-                    description="Top produkty, trend tygodniowy, wskaźniki rotacji."
+                    description="Top produkty, trend tygodniowy, wskaźniki rotacji (UI przygotowane)."
                 />
                 <ComingSoonCard
                     title="Raport ABC / XYZ"
-                    description="Klasyfikacja według wartości/rotacji + eksport."
+                    description="Klasyfikacja według wartości/rotacji + eksport (UI przygotowane)."
                 />
                 <ComingSoonCard
                     title="Sugestie zamówień"
-                    description="Generowanie propozycji do dostawcy + CSV."
+                    description="Generowanie propozycji do dostawcy + CSV (do spięcia opcjonalnie)."
                 />
             </div>
         </div>
