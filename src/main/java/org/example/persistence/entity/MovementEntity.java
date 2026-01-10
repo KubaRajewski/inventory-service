@@ -23,16 +23,16 @@ public record MovementEntity(
         @MappedProperty(type = DataType.STRING)
         MovementType type,
 
-        Integer quantity,
-
-        @MappedProperty(value = "from_location", type = DataType.STRING)
+        @MappedProperty(type = DataType.STRING)
         Location fromLocation,
 
-        @MappedProperty(value = "to_location", type = DataType.STRING)
+        @MappedProperty(type = DataType.STRING)
         Location toLocation,
 
-        @DateCreated
+        Integer quantity,
+
         @MappedProperty("occurred_at")
+        @DateCreated
         Instant occurredAt,
 
         String note,

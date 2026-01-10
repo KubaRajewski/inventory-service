@@ -1,18 +1,16 @@
 package org.example.domain.dto;
 
 import io.micronaut.serde.annotation.Serdeable;
-import org.example.domain.SalesImportStatus;
 
 @Serdeable
 public record SalesImportResult(
-        SalesImportStatus status,
-        int rowsRead,
-        int rowsValid,
-        int rowsUnknownSku,
-        int movementsCreated,
+        Long importId,
+        String status,
+        int totalLines,
+        int processedLines,
+        int missingSkus,
+        int processedSkus,
         long totalQuantityRequested,
         long totalQuantityApplied,
-        String sha256
-) {
-}
-
+        String fileSha256
+) {}

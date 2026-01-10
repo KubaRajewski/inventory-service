@@ -12,6 +12,8 @@ import org.example.persistence.repo.MovementRepository;
 import org.example.persistence.repo.ProductRepository;
 import org.example.persistence.repo.StockRepository;
 
+import java.time.Instant;
+
 @Singleton
 public class MovementService {
 
@@ -34,7 +36,7 @@ public class MovementService {
         ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product not found: id=" + productId));
 
-        Location target = toLocation == null ? Location.BACKROOM : toLocation;
+        Location target = (toLocation == null) ? Location.BACKROOM : toLocation;
 
         stockRepository.increaseQuantity(product.id(), target, qty);
 
@@ -42,12 +44,12 @@ public class MovementService {
                 null,
                 product.id(),
                 MovementType.RECEIPT,
-                safeToInt(qty),
                 null,
                 target,
-                null,   // @DateCreated wypełni
+                safeToInt(qty),
+                Instant.now(),
                 note,
-                null    // salesImportId
+                null
         ));
     }
 
@@ -58,7 +60,7 @@ public class MovementService {
         ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product not found: id=" + productId));
 
-        Location source = fromLocation == null ? Location.SHOPFLOOR : fromLocation;
+        Location source = (fromLocation == null) ? Location.SHOPFLOOR : fromLocation;
 
         long changed = stockRepository.decreaseQuantityIfEnough(product.id(), source, qty);
         if (changed == 0) {
@@ -69,10 +71,10 @@ public class MovementService {
                 null,
                 product.id(),
                 MovementType.ISSUE,
-                safeToInt(qty),
                 source,
                 null,
-                null,
+                safeToInt(qty),
+                Instant.now(),
                 note,
                 null
         ));
@@ -103,10 +105,10 @@ public class MovementService {
                 null,
                 product.id(),
                 MovementType.TRANSFER,
-                safeToInt(qty),
                 from,
                 to,
-                null,
+                safeToInt(qty),
+                Instant.now(),
                 note,
                 null
         ));

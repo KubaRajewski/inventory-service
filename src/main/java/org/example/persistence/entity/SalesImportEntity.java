@@ -31,6 +31,5 @@ public record SalesImportEntity(
         Integer processedLines,
 
         @DateCreated
-        @MappedProperty("created_at")
         Instant createdAt
 ) {}

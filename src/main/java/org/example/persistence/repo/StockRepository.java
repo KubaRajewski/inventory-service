@@ -19,17 +19,23 @@ public interface StockRepository extends CrudRepository<StockEntity, StockId> {
 
     Optional<StockEntity> findByIdProductIdAndIdLocation(Long productId, Location location);
 
+    default Optional<StockEntity> findByProductIdAndLocation(Long productId, Location location) {
+        return findByIdProductIdAndIdLocation(productId, location);
+    }
+
     @Query("""
-            UPDATE stock
-            SET quantity = quantity + :qty
-            WHERE product_id = :productId
-              AND location = :location
+            INSERT INTO stock(product_id, location, quantity)
+            VALUES (:productId, :location, :qty)
+            ON CONFLICT (product_id, location)
+            DO UPDATE SET quantity = stock.quantity + EXCLUDED.quantity,
+                          updated_at = now()
             """)
-    long increaseQuantity(Long productId, Location location, long qty);
+    void upsertIncrease(Long productId, Location location, long qty);
 
     @Query("""
             UPDATE stock
-            SET quantity = quantity - :qty
+            SET quantity = quantity - :qty,
+                updated_at = now()
             WHERE product_id = :productId
               AND location = :location
               AND quantity >= :qty

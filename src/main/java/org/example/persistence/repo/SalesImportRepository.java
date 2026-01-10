@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface SalesImportRepository extends CrudRepository<SalesImportEntity, Long> {
 
     Optional<SalesImportEntity> findBySha256(String sha256);
+
+    SalesImportEntity update(SalesImportEntity entity);
 }

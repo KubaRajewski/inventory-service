@@ -10,6 +10,7 @@ import {
     Settings,
     Bell,
     Search,
+    ShoppingCart,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ const nav = [
     { to: "/stocks", label: "Stany", icon: Boxes },
     { to: "/movements", label: "Ruchy", icon: ArrowLeftRight },
     { to: "/sales-import", label: "Import", icon: Upload },
+    { to: "/order-suggestions", label: "Zamówienie", icon: ShoppingCart },
     { to: "/reports", label: "Raporty", icon: BarChart3 },
     { to: "/settings", label: "Ustawienia", icon: Settings },
 ];
@@ -55,6 +57,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                                             isActive ? "bg-muted font-medium" : "hover:bg-muted/60",
                                         ].join(" ")
                                     }
+                                    end={n.to === "/"}
                                 >
                                     <Icon className="h-4 w-4" />
                                     {n.label}
