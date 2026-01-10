@@ -1,18 +1,16 @@
 package org.example.domain.dto;
 
-import org.example.domain.Location;
+import io.micronaut.serde.annotation.Serdeable;
 
+@Serdeable
 public record StockView(
         Long productId,
         String sku,
         String name,
-        String unit, int minTotal,
-        int backroomQty,
-        int shopfloorQty,
-        int totalQty,
+        String unit,
+        Integer minTotal,
+        Integer backroomQty,
+        Integer shopfloorQty,
+        Integer totalQty,
         boolean low
-) {
-    public int qty(Location location) {
-        return location == Location.BACKROOM ? backroomQty : shopfloorQty;
-    }
-}
+) {}

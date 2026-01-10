@@ -12,8 +12,6 @@ import org.example.persistence.repo.MovementRepository;
 import org.example.persistence.repo.ProductRepository;
 import org.example.persistence.repo.StockRepository;
 
-import java.time.Instant;
-
 @Singleton
 public class MovementService {
 
@@ -38,19 +36,19 @@ public class MovementService {
 
         Location target = toLocation == null ? Location.BACKROOM : toLocation;
 
-        stockRepository.increaseQuantity(productId, Location.valueOf(target.toString()), qty);
+        stockRepository.increaseQuantity(product.id(), target, qty);
 
         movementRepository.save(new MovementEntity(
                 null,
                 product.id(),
                 MovementType.RECEIPT,
-                qty,
+                safeToInt(qty),
                 null,
                 target,
-                null,
-                note
+                null,   // @DateCreated wypełni
+                note,
+                null    // salesImportId
         ));
-
     }
 
     @Transactional
@@ -62,7 +60,7 @@ public class MovementService {
 
         Location source = fromLocation == null ? Location.SHOPFLOOR : fromLocation;
 
-        long changed = stockRepository.decreaseQuantityIfEnough(product.id(), Location.valueOf(String.valueOf(source)), qty);
+        long changed = stockRepository.decreaseQuantityIfEnough(product.id(), source, qty);
         if (changed == 0) {
             throw new InsufficientStockException("Not enough quantity to issue");
         }
@@ -71,13 +69,13 @@ public class MovementService {
                 null,
                 product.id(),
                 MovementType.ISSUE,
-                qty,
+                safeToInt(qty),
                 source,
                 null,
                 null,
-                note
+                note,
+                null
         ));
-
     }
 
     @Transactional
@@ -94,24 +92,24 @@ public class MovementService {
         ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product not found: id=" + productId));
 
-        long changed = stockRepository.decreaseQuantityIfEnough(product.id(), Location.valueOf(String.valueOf(from)), qty);
+        long changed = stockRepository.decreaseQuantityIfEnough(product.id(), from, qty);
         if (changed == 0) {
             throw new InsufficientStockException("Not enough quantity to transfer");
         }
 
-        stockRepository.increaseQuantity(product.id(), Location.valueOf(String.valueOf(to)), qty);
+        stockRepository.increaseQuantity(product.id(), to, qty);
 
         movementRepository.save(new MovementEntity(
                 null,
                 product.id(),
                 MovementType.TRANSFER,
-                qty,
+                safeToInt(qty),
                 from,
                 to,
                 null,
-                note
+                note,
+                null
         ));
-
     }
 
     private static void requirePositive(long qty) {

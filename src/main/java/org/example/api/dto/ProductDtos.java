@@ -1,6 +1,7 @@
 package org.example.api.dto;
 
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ public final class ProductDtos {
 
     private ProductDtos() {}
 
+    @Serdeable
     @Introspected
     public record CreateProductRequest(
             @NotBlank String sku,
@@ -19,6 +21,7 @@ public final class ProductDtos {
             @NotNull @Min(0) Integer minTotal
     ) {}
 
+    @Serdeable
     @Introspected
     public record UpdateProductRequest(
             Optional<String> sku,
@@ -28,6 +31,7 @@ public final class ProductDtos {
             Optional<Boolean> active
     ) {}
 
+    @Serdeable
     @Introspected
     public record ProductResponse(
             Long id,

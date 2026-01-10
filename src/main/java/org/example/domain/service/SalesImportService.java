@@ -6,7 +6,6 @@ import org.example.domain.Location;
 import org.example.domain.MovementType;
 import org.example.domain.SalesImportStatus;
 import org.example.domain.dto.SalesImportResult;
-import org.example.domain.exception.NotFoundException;
 import org.example.persistence.entity.MovementEntity;
 import org.example.persistence.entity.ProductEntity;
 import org.example.persistence.entity.SalesImportEntity;
@@ -45,39 +44,50 @@ public class SalesImportService {
         }
 
         String sha = sha256Hex(fileBytes);
+
         Optional<SalesImportEntity> existing = salesImportRepository.findBySha256(sha);
         if (existing.isPresent()) {
             SalesImportEntity e = existing.get();
+            // mapujemy “stary” model DB na “bogaty” DTO
             return new SalesImportResult(
                     SalesImportStatus.SKIPPED_DUPLICATE,
-                    e.rowsRead(),
-                    e.rowsValid(),
-                    e.rowsUnknownSku(),
-                    e.movementsCreated(),
-                    e.totalQuantityRequested(),
-                    e.totalQuantityApplied(),
+                    nvl(e.totalLines()),
+                    nvl(e.processedLines()),
+                    0,
+                    0,
+                    0L,
+                    0L,
                     e.sha256()
             );
         }
 
         ParsedCsv parsed = parseCsv(new String(fileBytes, StandardCharsets.UTF_8));
 
-        int rowsRead = parsed.rowsRead;
-        int rowsValid = parsed.rowsValid;
+        int totalLines = parsed.rowsRead;
+        int processedLines = parsed.rowsValid; // “valid” w Twojej logice = linie poprawne
         long totalQtyRequested = parsed.totalQuantityRequested;
 
         int unknownSkuCount = 0;
         int movementsCreated = 0;
         long totalQtyApplied = 0;
 
+        // Najpierw zapisujemy rekord sales_import (żeby mieć ID do movement.sales_import_id)
+        SalesImportEntity saved = salesImportRepository.save(new SalesImportEntity(
+                null,
+                sha,
+                safeFilename(originalFilename),
+                SalesImportStatus.SUCCESS,
+                totalLines,
+                processedLines,
+                Instant.now()
+        ));
+
         try {
             for (Map.Entry<String, Long> entry : parsed.qtyBySku.entrySet()) {
                 String sku = entry.getKey();
                 long qty = entry.getValue();
 
-                ProductEntity product = productRepository.findBySku(sku)
-                        .orElse(null);
-
+                ProductEntity product = productRepository.findBySku(sku).orElse(null);
                 if (product == null) {
                     unknownSkuCount++;
                     continue;
@@ -90,15 +100,17 @@ public class SalesImportService {
                     remaining -= takenFromShopfloor;
                     totalQtyApplied += takenFromShopfloor;
                     movementsCreated++;
+
                     movementRepository.save(new MovementEntity(
                             null,
                             product.id(),
                             MovementType.SALE_IMPORT,
-                            takenFromShopfloor,
+                            safeToInt(takenFromShopfloor),
                             Location.SHOPFLOOR,
                             null,
-                            Instant.now(),
-                            "sale import: " + safeFilename(originalFilename)
+                            null,
+                            "sale import: " + safeFilename(originalFilename),
+                            saved.id()
                     ));
                 }
 
@@ -108,56 +120,47 @@ public class SalesImportService {
                         remaining -= takenFromBackroom;
                         totalQtyApplied += takenFromBackroom;
                         movementsCreated++;
+
                         movementRepository.save(new MovementEntity(
                                 null,
                                 product.id(),
                                 MovementType.SALE_IMPORT,
-                                takenFromBackroom,
+                                safeToInt(takenFromBackroom),
                                 Location.BACKROOM,
                                 null,
-                                Instant.now(),
-                                "sale import: " + safeFilename(originalFilename)
+                                null,
+                                "sale import: " + safeFilename(originalFilename),
+                                saved.id()
                         ));
                     }
                 }
             }
 
-            SalesImportEntity saved = salesImportRepository.save(new SalesImportEntity(
-                    null,
-                    sha,
+            // aktualizacja rekordu sales_import o finalny status i liczniki (w DB masz tylko totalLines/processedLines)
+            // unknownSku / movements / qty w tej wersji DB nie zapisujemy w tabeli (bo nie ma kolumn)
+            // możesz ewentualnie dopisać je do "status" albo do osobnej tabeli, ale teraz chcemy żeby działało.
+
+            return new SalesImportResult(
                     SalesImportStatus.SUCCESS,
-                    rowsRead,
-                    rowsValid,
+                    totalLines,
+                    processedLines,
                     unknownSkuCount,
                     movementsCreated,
                     totalQtyRequested,
                     totalQtyApplied,
-                    Instant.now()
-            ));
-
-            return new SalesImportResult(
-                    saved.status(),
-                    saved.rowsRead(),
-                    saved.rowsValid(),
-                    saved.rowsUnknownSku(),
-                    saved.movementsCreated(),
-                    saved.totalQuantityRequested(),
-                    saved.totalQuantityApplied(),
-                    saved.sha256()
+                    sha
             );
 
         } catch (RuntimeException ex) {
-            salesImportRepository.save(new SalesImportEntity(
-                    null,
+            // w DB mamy tylko status - aktualizacja przez save z tym samym id (Micronaut Data zrobi update)
+            salesImportRepository.update(new SalesImportEntity(
+                    saved.id(),
                     sha,
+                    safeFilename(originalFilename),
                     SalesImportStatus.FAILED,
-                    rowsRead,
-                    rowsValid,
-                    unknownSkuCount,
-                    movementsCreated,
-                    totalQtyRequested,
-                    totalQtyApplied,
-                    Instant.now()
+                    totalLines,
+                    processedLines,
+                    saved.createdAt() // lub Instant.now(); lepiej zachować createdAt
             ));
             throw ex;
         }
@@ -167,30 +170,28 @@ public class SalesImportService {
         if (qty <= 0) return 0;
 
         for (int i = 0; i < 3; i++) {
-            Long current = Long.valueOf(stockRepository.findByIdProductIdAndIdLocation(productId, location)
+            int current = stockRepository.findByIdProductIdAndIdLocation(productId, location)
                     .map(s -> s.quantity())
-                    .orElse(0));
+                    .orElse(0);
 
             if (current <= 0) {
                 return 0;
             }
 
-            long toTake = Math.min(current, qty);
+            long toTake = Math.min((long) current, qty);
             long changed = stockRepository.decreaseQuantityIfEnough(productId, location, toTake);
             if (changed > 0) {
                 return toTake;
             }
         }
 
-        Long current = Long.valueOf(stockRepository.findByIdProductIdAndIdLocation(productId, location)
+        int current = stockRepository.findByIdProductIdAndIdLocation(productId, location)
                 .map(s -> s.quantity())
-                .orElse(0));
+                .orElse(0);
 
-        if (current <= 0) {
-            return 0;
-        }
+        if (current <= 0) return 0;
 
-        long toTake = Math.min(current, qty);
+        long toTake = Math.min((long) current, qty);
         long changed = stockRepository.decreaseQuantityIfEnough(productId, location, toTake);
         return changed > 0 ? toTake : 0;
     }
@@ -210,9 +211,7 @@ public class SalesImportService {
             rowsRead++;
 
             String[] parts = line.split("[,;]");
-            if (parts.length < 2) {
-                continue;
-            }
+            if (parts.length < 2) continue;
 
             String sku = parts[0].trim();
             String qtyStr = parts[1].trim();
@@ -221,9 +220,7 @@ public class SalesImportService {
                 continue;
             }
 
-            if (sku.isBlank()) {
-                continue;
-            }
+            if (sku.isBlank()) continue;
 
             long qty;
             try {
@@ -232,9 +229,7 @@ public class SalesImportService {
                 continue;
             }
 
-            if (qty <= 0) {
-                continue;
-            }
+            if (qty <= 0) continue;
 
             rowsValid++;
             totalQtyRequested += qty;
@@ -263,11 +258,21 @@ public class SalesImportService {
         return name.replaceAll("[\\r\\n\\t]", " ").trim();
     }
 
+    private static int safeToInt(long qty) {
+        if (qty > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Quantity exceeds Integer.MAX_VALUE");
+        }
+        return (int) qty;
+    }
+
+    private static int nvl(Integer v) {
+        return v == null ? 0 : v;
+    }
+
     private record ParsedCsv(
             Map<String, Long> qtyBySku,
             int rowsRead,
             int rowsValid,
             long totalQuantityRequested
-    ) {
-    }
+    ) {}
 }

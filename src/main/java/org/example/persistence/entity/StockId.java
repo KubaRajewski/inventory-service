@@ -11,8 +11,9 @@ import java.io.Serializable;
 @Embeddable
 @Introspected
 public record StockId(
+        @MappedProperty("product_id")
         Long productId,
 
-        @MappedProperty(type = DataType.STRING)
+        @MappedProperty(value = "location", type = DataType.STRING)
         Location location
 ) implements Serializable {}

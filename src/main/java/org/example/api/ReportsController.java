@@ -32,7 +32,7 @@ public class ReportsController {
         for (MovementEntity m : all) {
             if (m.type() != MovementType.SALE_IMPORT) continue;
             if (m.productId() == null || m.quantity() == null) continue;
-            soldByProduct.merge(m.productId(), m.quantity(), Long::sum);
+            soldByProduct.merge(m.productId(), Long.valueOf(m.quantity()), Long::sum);
         }
 
         List<Map.Entry<Long, Long>> sorted = soldByProduct.entrySet().stream()
